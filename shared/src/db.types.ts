@@ -1,21 +1,13 @@
 export type PermissionLevel = 0 | 1 | 2 | 3 | 4;
 
-export interface RegisterRequest {
-  username: string;
-  email: string;
-  firstname: string;
-  lastname: string;
-  password: string;
-}
-
 export interface LoginRequest {
-  identifier: string;
+  firstname: string;
   password: string;
 }
 
 export interface LoginResponse {
   token: string;
-  user: Pick<UsersTable, "id" | "username" | "email" | "firstname" | "lastname" | "permission_level">;
+  user: Pick<UsersTable, "id" | "firstname" | "lastname" | "permission_level">;
 }
 
 export type SeverityLevel = "low" | "medium" | "high" | "critical";
@@ -30,8 +22,6 @@ export type MeasurementType =
 
 export interface UsersTable {
   id: number;
-  username: string;
-  email: string;
   firstname: string;
   lastname: string;
   password: string;
