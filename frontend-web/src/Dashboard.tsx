@@ -1,6 +1,12 @@
 import React from "react";
-import type { AlertsTable, SeverityLevel, UsersTable, ValuesTable } from "../../../shared/src/db.types.js";
+import type {
+  AlertsTable,
+  SeverityLevel,
+  UsersTable,
+  ValuesTable,
+} from "../../shared/src/db.types.js";
 import "./Dashboard.css";
+import { useState } from "react";
 
 interface PatientSummary {
   user: Pick<UsersTable, "id" | "firstname" | "lastname">;
@@ -15,25 +21,34 @@ interface ActivityLogItem {
 }
 
 const patients: PatientSummary[] = [
-  { user: { id: 100, firstname: "Robert", lastname: "Chen" }, status: "Stable" },
+  {
+    user: { id: 100, firstname: "Robert", lastname: "Chen" },
+    status: "Stable",
+  },
   {
     user: { id: 101, firstname: "Elena", lastname: "Rodriguez" },
     status: "Alert",
-    alertText: "Alert: Tachycardia"
+    alertText: "Alert: Tachycardia",
   },
-  { user: { id: 102, firstname: "Marcus", lastname: "Thorne" }, status: "Observation" }
+  {
+    user: { id: 102, firstname: "Marcus", lastname: "Thorne" },
+    status: "Observation",
+  },
 ];
 
-const latestVitals: Pick<ValuesTable, "heart_rate" | "ambient_temperature" | "gas_detected"> = {
+const latestVitals: Pick<
+  ValuesTable,
+  "heart_rate" | "ambient_temperature" | "gas_detected"
+> = {
   heart_rate: 72,
   ambient_temperature: 36.6,
-  gas_detected: 98
+  gas_detected: 98,
 };
 
 const activityLogs: ActivityLogItem[] = [
   { id: "a1", text: "Routine vitals check performed", timestamp: "14:30:12" },
   { id: "a2", text: "Dosage adjustment: Atenolol 25mg", timestamp: "11:15:00" },
-  { id: "a3", text: "Patient sleep cycle detected", timestamp: "23:45:05" }
+  { id: "a3", text: "Patient sleep cycle detected", timestamp: "23:45:05" },
 ];
 
 const alerts: AlertsTable[] = [
@@ -43,7 +58,7 @@ const alerts: AlertsTable[] = [
     user_id: 101,
     timestamp: "2026-04-30T14:42:00",
     alert_type: "CRITICAL_HEART_RATE",
-    severity: "critical"
+    severity: "critical",
   },
   {
     lid: 2,
@@ -51,8 +66,8 @@ const alerts: AlertsTable[] = [
     user_id: 103,
     timestamp: "2026-04-30T14:40:12",
     alert_type: "FALL_DETECTED",
-    severity: "high"
-  }
+    severity: "high",
+  },
 ];
 
 function severityLabel(severity: SeverityLevel): string {
@@ -63,6 +78,21 @@ function severityLabel(severity: SeverityLevel): string {
 }
 
 export function Dashboard(): React.JSX.Element {
+  const [selectedPatient, setSelectedPatient] = useState<PatientSummary | null>(
+    patients[0],
+  );
+  const [searchText, setSearchText] = useState("");
+
+  function handleSelectPatient(patient: PatientSummary): void {
+    setSelectedPatient(patient);
+  }
+
+  const filteredPatients = patients.filter((patient) => {
+    const fullName =
+      `${patient.user.firstname} ${patient.user.lastname}`.toLowerCase();
+    return fullName.includes(searchText.toLowerCase());
+  });
+
   return (
     <div className="dashboard-page">
       <header className="dashboard-header">
@@ -83,17 +113,29 @@ export function Dashboard(): React.JSX.Element {
         <aside className="left-sidebar">
           <div className="sidebar-title-row">
             <h2>Patient Directory</h2>
-            <input type="text" placeholder="Search patients..." />
+            <input
+              type="text"
+              placeholder="Search patients..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
           </div>
           <ul className="patient-list">
-            {patients.map((patient) => (
-              <li key={patient.user.id} className={patient.status === "Stable" ? "active" : ""}>
-                <p className="patient-name">
-                  {patient.user.firstname} {patient.user.lastname}
-                </p>
-                <p className={`patient-status ${patient.status.toLowerCase()}`}>
-                  {patient.alertText ?? patient.status}
-                </p>
+            {filteredPatients.map((patient) => (
+              <li key={patient.user.id}>
+                <button
+                  className={`patient-btn ${patient === selectedPatient ? "active" : ""} ${patient.status.toLowerCase()}`}
+                  onClick={() => handleSelectPatient(patient)}
+                >
+                  <span className="patient-name">
+                    {patient.user.firstname} {patient.user.lastname}
+                  </span>
+                  <span
+                    className={`patient-status ${patient.status.toLowerCase()}`}
+                  >
+                    {patient.alertText ?? patient.status}
+                  </span>
+                </button>
               </li>
             ))}
           </ul>
@@ -102,10 +144,13 @@ export function Dashboard(): React.JSX.Element {
         <section className="center-panel">
           <div className="panel-head">
             <div>
-              <h2>Robert Chen</h2>
-              <p>ID: #8829-102 | Ward 4, Room 12</p>
+              <h2>
+                {selectedPatient?.user.firstname}{" "}
+                {selectedPatient?.user.lastname}
+              </h2>
+              <p>ID: #{selectedPatient?.user.id} | Ward 4, Room 12</p>
             </div>
-            <span className="status-pill">Normal Status</span>
+            <span className="status-pill">{selectedPatient?.status}</span>
           </div>
 
           <div className="cards-grid">
@@ -129,7 +174,9 @@ export function Dashboard(): React.JSX.Element {
           <div className="bottom-grid">
             <article className="card compact">
               <h3>Temperature Stability</h3>
-              <div className="temperature-circle">{latestVitals.ambient_temperature} C</div>
+              <div className="temperature-circle">
+                {latestVitals.ambient_temperature} C
+              </div>
               <p>Fluctuation: +-0.2 C</p>
             </article>
 
@@ -152,14 +199,23 @@ export function Dashboard(): React.JSX.Element {
           <div className="alerts-wrap">
             {alerts.map((alert) => (
               <article key={alert.lid} className="alert-card">
-                <p className="alert-severity">{severityLabel(alert.severity)}: {alert.alert_type}</p>
-                <p className="alert-meta">User #{alert.user_id ?? "-"} | Device #{alert.device_id ?? "-"}</p>
-                <p className="alert-time">{new Date(alert.timestamp).toLocaleTimeString("ro-RO")}</p>
+                <p className="alert-severity">
+                  {severityLabel(alert.severity)}: {alert.alert_type}
+                </p>
+                <p className="alert-meta">
+                  User #{alert.user_id ?? "-"} | Device #
+                  {alert.device_id ?? "-"}
+                </p>
+                <p className="alert-time">
+                  {new Date(alert.timestamp).toLocaleTimeString("ro-RO")}
+                </p>
                 <button type="button">Acknowledge</button>
               </article>
             ))}
           </div>
-          <div className="server-status">Server Status: Online | Low Latency</div>
+          <div className="server-status">
+            Server Status: Online | Low Latency
+          </div>
         </aside>
       </main>
     </div>
