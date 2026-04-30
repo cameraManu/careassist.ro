@@ -4,19 +4,17 @@ import type { PermissionLevel } from "../../../shared/src/db.types.js";
 
 interface JwtPayload {
   sub: number;
-  email: string;
   permission_level: PermissionLevel;
-  firstname?: string;
-  lastname?: string;
+  firstname: string;
+  lastname: string;
 }
 
 export interface AuthenticatedRequest extends Request {
   user?: {
     id: number;
-    email: string;
     permission_level: PermissionLevel;
-    firstname?: string;
-    lastname?: string;
+    firstname: string;
+    lastname: string;
   };
 }
 
@@ -40,7 +38,6 @@ export function authenticateJwt(req: AuthenticatedRequest, res: Response, next: 
     const decoded = jwt.verify(token, secret) as JwtPayload;
     req.user = {
       id: decoded.sub,
-      email: decoded.email,
       permission_level: decoded.permission_level,
       firstname: decoded.firstname,
       lastname: decoded.lastname
