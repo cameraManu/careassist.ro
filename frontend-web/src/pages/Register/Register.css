@@ -1,0 +1,25 @@
+.auth-container-wide {
+  max-width: 540px;
+}
+
+.register-grid {
+  gap: 6px;
+}
+
+.register-feedback {
+  margin-top: 10px;
+}
+
+.auth-success {
+  margin: 10px 0 0;
+  border-radius: 8px;
+  background: #ecfdf5;
+  border: 1px solid #86efac;
+  color: #166534;
+  font-size: 13px;
+  padding: 10px 12px;
+}
+
+.register-button {
+  margin-top: 14px;
+}

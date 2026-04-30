@@ -10,8 +10,12 @@ export const dbPool = mysql.createPool({
   port: Number(process.env.MYSQL_PORT ?? 3306),
   user: process.env.MYSQL_USER ?? "root",
   password: process.env.MYSQL_PASSWORD ?? "",
-  database: process.env.MYSQL_DATABASE ?? "careassist",
+  database: process.env.MYSQL_DATABASE ?? "carreassist",
   connectionLimit,
   waitForConnections: true,
   queueLimit: 0
 });
+
+export async function verifyDatabaseConnection(): Promise<void> {
+  await dbPool.query("SELECT 1");
+}

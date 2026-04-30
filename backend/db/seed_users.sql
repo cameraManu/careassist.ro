@@ -1,4 +1,4 @@
-USE careassist;
+USE carreassist;
 
 INSERT INTO devices (id, description, sensor_list, date_installed)
 VALUES
@@ -10,14 +10,16 @@ VALUES
   )
 ON DUPLICATE KEY UPDATE description = VALUES(description);
 
-INSERT INTO users (id, firstname, lastname, password, device_id, permission_level)
+INSERT INTO users (id, username, email, firstname, lastname, password, device_id, permission_level)
 VALUES
-  (100, 'patient_demo', 'Patient', 'Pass123!', 1, 0),
-  (101, 'doctor_demo', 'Doctor', 'Pass123!', NULL, 1),
-  (102, 'supervisor_demo', 'Supervisor', 'Pass123!', NULL, 2),
-  (103, 'caregiver_demo', 'Caregiver', 'Pass123!', 1, 3),
-  (104, 'admin_demo', 'Admin', 'Pass123!', NULL, 4)
+  (100, 'patient_demo', 'patient_demo@careassist.ro', 'Patient', 'Demo', '$2a$10$wpDZCZab670DPHfesUTwFeotvVpglDLVko.sKnjND5FyPWvhmYjKK', 1, 0),
+  (101, 'doctor_demo', 'doctor_demo@careassist.ro', 'Doctor', 'Demo', '$2a$10$wpDZCZab670DPHfesUTwFeotvVpglDLVko.sKnjND5FyPWvhmYjKK', NULL, 1),
+  (102, 'supervisor_demo', 'supervisor_demo@careassist.ro', 'Supervisor', 'Demo', '$2a$10$wpDZCZab670DPHfesUTwFeotvVpglDLVko.sKnjND5FyPWvhmYjKK', NULL, 2),
+  (103, 'caregiver_demo', 'caregiver_demo@careassist.ro', 'Caregiver', 'Demo', '$2a$10$wpDZCZab670DPHfesUTwFeotvVpglDLVko.sKnjND5FyPWvhmYjKK', 1, 3),
+  (104, 'admin_demo', 'admin_demo@careassist.ro', 'Admin', 'Demo', '$2a$10$wpDZCZab670DPHfesUTwFeotvVpglDLVko.sKnjND5FyPWvhmYjKK', NULL, 4)
 ON DUPLICATE KEY UPDATE
+  username = VALUES(username),
+  email = VALUES(email),
   firstname = VALUES(firstname),
   lastname = VALUES(lastname),
   password = VALUES(password),
