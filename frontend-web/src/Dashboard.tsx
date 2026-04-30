@@ -1,10 +1,5 @@
 import React from "react";
-import type {
-  AlertsTable,
-  SeverityLevel,
-  UsersTable,
-  ValuesTable,
-} from "../../shared/src/db.types.js";
+import type { AlertsTable, SeverityLevel, UsersTable, ValuesTable } from "../../shared/src/db.types";
 import "./Dashboard.css";
 import { useState, useEffect } from "react";
 
