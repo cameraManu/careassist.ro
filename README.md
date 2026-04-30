@@ -1,2 +1,2 @@
 # careassist.ro
-aici murim
+Proiect IS, Ambient Assisted Living.
