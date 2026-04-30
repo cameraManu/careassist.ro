@@ -6,7 +6,7 @@ import type {
   ValuesTable,
 } from "../../shared/src/db.types.js";
 import "./Dashboard.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface PatientSummary {
   user: Pick<UsersTable, "id" | "firstname" | "lastname">;
@@ -35,15 +35,6 @@ const patients: PatientSummary[] = [
     status: "Observation",
   },
 ];
-
-const latestVitals: Pick<
-  ValuesTable,
-  "heart_rate" | "ambient_temperature" | "gas_detected"
-> = {
-  heart_rate: 72,
-  ambient_temperature: 36.6,
-  gas_detected: 98,
-};
 
 const activityLogs: ActivityLogItem[] = [
   { id: "a1", text: "Routine vitals check performed", timestamp: "14:30:12" },
@@ -77,11 +68,62 @@ function severityLabel(severity: SeverityLevel): string {
   return "Low";
 }
 
+// Mock function to determine patient status - can be replaced with actual data
+function getPatientStatus(userId: number): PatientSummary["status"] {
+  const statuses: ("Stable" | "Observation" | "Alert")[] = [
+    "Stable",
+    "Observation",
+    "Alert",
+  ];
+  return statuses[userId % 3];
+}
+
 export function Dashboard(): React.JSX.Element {
+  const [patients, setPatients] = useState<PatientSummary[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<PatientSummary | null>(
-    patients[0],
+    null,
   );
   const [searchText, setSearchText] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPatients = async () => {
+      try {
+        const apiUrl =
+          import.meta.env.VITE_API_URL || "http://localhost:4000/api/v1";
+        const response = await fetch(`${apiUrl}/patients`);
+        const data = await response.json();
+
+        const patientSummaries: PatientSummary[] = data.map(
+          (user: Pick<UsersTable, "id" | "firstname" | "lastname">) => ({
+            user,
+            status: getPatientStatus(user.id),
+            alertText: undefined,
+          }),
+        );
+
+        setPatients(patientSummaries);
+        if (patientSummaries.length > 0) {
+          setSelectedPatient(patientSummaries[0]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch patients:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPatients();
+  }, []);
+
+  const latestVitals: Pick<
+    ValuesTable,
+    "heart_rate" | "ambient_temperature" | "gas_detected"
+  > = {
+    heart_rate: 72,
+    ambient_temperature: 36.6,
+    gas_detected: 98,
+  };
 
   function handleSelectPatient(patient: PatientSummary): void {
     setSelectedPatient(patient);
