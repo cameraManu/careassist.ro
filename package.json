@@ -1,0 +1,11 @@
+{
+  "name": "careassist-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "shared",
+    "backend",
+    "frontend-web",
+    "frontend-mobile"
+  ]
+}
