@@ -105,50 +105,20 @@
 }
 
 .patient-list li {
-  padding: 0;
-  margin-bottom: 8px;
-}
-
-.patient-btn {
-  width: 100%;
   padding: 12px;
-  border: none;
   border-radius: 10px;
+  margin-bottom: 8px;
   background: #f8fafc;
-  cursor: pointer;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  transition: all 0.2s ease;
 }
 
-.patient-btn:hover {
-  background: #e2e8f0;
-}
-
-.patient-btn.active {
+.patient-list li.active {
   border-left: 4px solid #0284c7;
   background: #e0f2fe;
-  padding-left: calc(12px - 4px);
-}
-
-.patient-btn.stable {
-  border-left: 4px solid #16a34a;
-}
-
-.patient-btn.alert {
-  border-left: 4px solid #ef4444;
-}
-
-.patient-btn.observation {
-  border-left: 4px solid #f59e0b;
 }
 
 .patient-name {
   margin: 0;
   font-weight: 700;
-  font-size: 0.9375rem;
 }
 
 .patient-status {
