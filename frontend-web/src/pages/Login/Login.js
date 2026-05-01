@@ -14,7 +14,7 @@ export function Login() {
     const auth = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
-    const from = location.state?.from?.pathname ?? "/";
+    const from = location.state?.from?.pathname ?? "/dashboard";
     const handleInputChange = (event) => {
         const { name, value } = event.target;
         setFormState((prevState) => ({ ...prevState, [name]: value }));

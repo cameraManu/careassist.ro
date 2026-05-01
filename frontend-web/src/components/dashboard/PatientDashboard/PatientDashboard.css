@@ -1,0 +1,90 @@
+.patient-dashboard-page {
+  min-height: 100vh;
+  padding: 24px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-family: Inter, Arial, sans-serif;
+}
+
+.patient-dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.patient-logout-btn {
+  border: none;
+  background: #dc2626;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.patient-meta {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.patient-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.patient-metric-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.patient-metric-card strong {
+  font-size: 28px;
+}
+
+.patient-vitals-list {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.patient-vitals-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.patient-vitals-list li {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #f1f5f9;
+}
+
+.patient-dashboard-state {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+}
+
+.patient-dashboard-error {
+  color: #b91c1c;
+}
+
+@media (max-width: 1024px) {
+  .patient-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .patient-vitals-list li {
+    grid-template-columns: 1fr;
+  }
+}

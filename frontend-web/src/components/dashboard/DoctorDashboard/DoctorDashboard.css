@@ -1,0 +1,265 @@
+.doctor-dashboard-page {
+  min-height: 100vh;
+  padding: 18px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-family: Inter, Arial, sans-serif;
+}
+
+.doctor-dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.doctor-logout-btn {
+  border: none;
+  background: #1d4ed8;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.doctor-dashboard-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr 290px;
+  gap: 12px;
+}
+
+.doctor-sidebar,
+.doctor-center,
+.doctor-alerts {
+  background: #fff;
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.doctor-alerts {
+  background: #fff5f5;
+  border: 1px solid #ffccc7;
+}
+
+.doctor-sidebar ul,
+.doctor-alerts ul {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.doctor-sidebar button {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+  text-align: left;
+  padding: 9px;
+  cursor: pointer;
+  display: grid;
+  gap: 2px;
+}
+
+.doctor-sidebar button.is-active {
+  border-color: #2563eb;
+  background: #dbeafe;
+}
+
+.doctor-sidebar small {
+  color: #64748b;
+}
+
+.doctor-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.doctor-card {
+  border: 1px solid #edf1f7;
+  border-radius: 16px;
+  padding: 12px;
+  background: #fbfdff;
+  min-height: 230px;
+  position: relative;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+}
+
+.doctor-chart-wrap {
+  margin-top: 6px;
+}
+
+.doctor-latest-badge {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 24px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+}
+
+.doctor-latest-heart {
+  color: #ff4d4f;
+}
+
+.doctor-latest-gas {
+  color: #73d13d;
+}
+
+.doctor-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.doctor-card-title h3 {
+  margin: 0;
+  font-size: 14px;
+  color: #334155;
+}
+
+.doctor-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.doctor-icon-heart {
+  background: #fff1f0;
+  color: #cf1322;
+}
+
+.doctor-icon-gas {
+  background: #f6ffed;
+  color: #389e0d;
+}
+
+.doctor-icon-temp {
+  background: #fff7e6;
+  color: #d46b08;
+}
+
+.doctor-icon-log {
+  background: #f0f5ff;
+  color: #1d39c4;
+}
+
+.doctor-selected-patient {
+  margin-top: 8px;
+  color: #475569;
+  font-size: 13px;
+}
+
+.doctor-temp-gauge {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+}
+
+.doctor-temp-ring {
+  width: 124px;
+  height: 124px;
+  border-radius: 50%;
+  border: 10px solid #73d13d;
+  display: grid;
+  place-items: center;
+  background: #f6ffed;
+}
+
+.doctor-temp-ring strong {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.doctor-temp-ring span {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.doctor-temp-gauge p {
+  margin: 0;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.doctor-logs-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.doctor-logs-list li {
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  padding: 8px;
+  display: grid;
+  gap: 4px;
+}
+
+.doctor-logs-list time {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.doctor-logs-list span {
+  font-size: 12px;
+  color: #1e293b;
+}
+
+.doctor-alerts li {
+  border: 1px solid #ffd8d6;
+  border-left: 5px solid #ff4d4f;
+  background: #fef2f2;
+  border-radius: 12px;
+  padding: 10px 10px 10px 12px;
+  color: #991b1b;
+  display: grid;
+  gap: 8px;
+}
+
+.doctor-alerts p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.doctor-alerts button {
+  justify-self: start;
+  border: 1px solid #ff7875;
+  background: #fff;
+  color: #cf1322;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.doctor-error {
+  margin-top: 12px;
+  color: #b91c1c;
+  font-size: 12px;
+}
+
+@media (max-width: 1200px) {
+  .doctor-dashboard-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .doctor-card-grid {
+    grid-template-columns: 1fr;
+  }
+}

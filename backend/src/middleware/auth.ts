@@ -2,11 +2,12 @@ import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import type { PermissionLevel } from "../../../shared/src/db.types.js";
 
-interface JwtPayload {
+interface TokenPayload {
   sub: number;
   permission_level: PermissionLevel;
   firstname: string;
   lastname: string;
+  device_id: number | null;
 }
 
 export interface AuthenticatedRequest extends Request {
@@ -15,7 +16,23 @@ export interface AuthenticatedRequest extends Request {
     permission_level: PermissionLevel;
     firstname: string;
     lastname: string;
+    device_id: number | null;
   };
+}
+
+function isTokenPayload(value: unknown): value is TokenPayload {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const payload = value as Partial<TokenPayload>;
+  return (
+    typeof payload.sub === "number" &&
+    typeof payload.permission_level === "number" &&
+    typeof payload.firstname === "string" &&
+    typeof payload.lastname === "string" &&
+    (typeof payload.device_id === "number" || payload.device_id === null)
+  );
 }
 
 export function authenticateJwt(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
@@ -35,12 +52,18 @@ export function authenticateJwt(req: AuthenticatedRequest, res: Response, next: 
   }
 
   try {
-    const decoded = jwt.verify(token, secret) as JwtPayload;
+    const decoded = jwt.verify(token, secret);
+    if (!isTokenPayload(decoded)) {
+      res.status(401).json({ message: "Token payload is invalid" });
+      return;
+    }
+
     req.user = {
       id: decoded.sub,
       permission_level: decoded.permission_level,
       firstname: decoded.firstname,
-      lastname: decoded.lastname
+      lastname: decoded.lastname,
+      device_id: decoded.device_id
     };
     next();
   } catch {
