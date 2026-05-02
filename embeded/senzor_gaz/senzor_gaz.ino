@@ -51,7 +51,7 @@ void setup() {
 
   // ── Incalzire MQ-6 ──
   pinMode(MQ6pin, INPUT);
-  Serial.println("MQ-6 se incalzeste 20 secunde...");
+  Serial.println("MQ-6 se incalzeste 20 secunde");
   for (int i = 20; i > 0; i--) {
     Serial.print(i);
     Serial.print("s... ");
