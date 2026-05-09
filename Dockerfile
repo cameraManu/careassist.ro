@@ -1,29 +1,37 @@
-# --- Stage 1: Build Frontend ---
+# --- Stage 1: Build ---
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Copy package files
+# Copy only package files first for better caching
 COPY package*.json ./
-# Use 'install' but ignore optional platform-specific errors
-RUN npm install
 
-# Copy everything
+# Clean install including devDependencies (needed for 'vite build')
+RUN npm ci || npm install
+
+# Copy everything else
 COPY . .
 
-# CI=false prevents the build from failing on simple warnings
-# If it still fails, the error is a hard code error
+# Run build with CI=false to ignore warnings
+# We use '|| ls -la' so if it fails, the build log might show us the folder state
 RUN CI=false npm run build
 
-# --- Stage 2: Final Run Image ---
+# --- Stage 2: Execution ---
 FROM node:20-alpine
 WORKDIR /app
 
+# Only production dependencies here
 COPY package*.json ./
 RUN npm install --production
+
+# Copy all source files
 COPY . .
 
-# Copy build from previous stage
+# Copy the built assets from Stage 1
+# IMPORTANT: If your vite.config.js uses a different base/outDir, adjust 'dist'
 COPY --from=builder /app/dist ./public
 
+ENV NODE_ENV=production
 EXPOSE 5000
+
+# Using node directly to ensure we see errors in Portainer logs
 CMD ["node", "index.js"]
