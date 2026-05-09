@@ -1,11 +1,9 @@
-version: '3.8'
-
 services:
   careassist-app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: careassist-prod
+    container_name: careassist-backend
     restart: always
     ports:
       - "5000:5000"
