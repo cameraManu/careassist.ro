@@ -10,6 +10,9 @@ services:
     ports:
       - "5000:5000"
     environment:
+      # Backend port
+      - PORT=5000
+
       # Connection to your external MariaDB
       - DB_HOST=${DB_HOST}
       - DB_USER=${DB_USER}
