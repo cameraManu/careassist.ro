@@ -1,16 +1,20 @@
 # --- Stage 1: Build backend ---
 FROM node:20-alpine AS backend-builder
 
-WORKDIR /app/backend
+WORKDIR /app
 
 # Copy backend package files
-COPY backend/package*.json ./
+COPY backend/package*.json ./backend/
 
 # Install backend dependencies
+WORKDIR /app/backend
 RUN npm install
 
 # Copy backend source
-COPY backend/ .
+COPY backend/ /app/backend/
+
+# Copy shared folder (IMPORTANT!)
+COPY shared/ /app/shared/
 
 # Build TypeScript -> dist/
 RUN npm run build
