@@ -23,8 +23,8 @@ services:
 
   careassist-frontend:
     build:
-      context: ./frontend-web
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend-web/Dockerfile
     container_name: careassist-frontend
     restart: always
     ports:
