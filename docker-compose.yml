@@ -1,5 +1,5 @@
 services:
-  careassist-app:
+  careassist-backend:
     build:
       context: .
       dockerfile: Dockerfile
@@ -36,4 +36,3 @@ services:
 networks:
   careassist-net:
     driver: bridge
-
