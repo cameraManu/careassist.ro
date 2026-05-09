@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
@@ -10,6 +10,7 @@ import {
   YAxis
 } from "recharts";
 import { useAuth } from "../../../context/AuthContext";
+import { fetchDoctorAlerts, acknowledgeAlert } from "../../services/alert.service";
 import "./DoctorDashboard.css";
 
 type DoctorPatientSummary = {
@@ -40,6 +41,16 @@ type ChartVitalsPoint = VitalsRecord & {
   chartTimestamp: string;
 };
 
+interface Alert {
+  id: number;
+  alert_type: string;
+  severity: string;
+  status: string;
+  timestamp: string;
+  acknowledged_at?: string;
+  acknowledged_by?: number;
+}
+
 export function DoctorDashboard(): React.JSX.Element {
   const { user, token, logout } = useAuth();
   const navigate = useNavigate();
@@ -48,9 +59,13 @@ export function DoctorDashboard(): React.JSX.Element {
   const [selectedPatientId, setSelectedPatientId] = React.useState<number | null>(null);
   const [selectedDeviceId, setSelectedDeviceId] = React.useState<number | null>(null);
   const [vitals, setVitals] = React.useState<VitalsRecord[]>([]);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [filters, setFilters] = useState({ severity: "", status: "", range: "" });
   const [isLoadingPatients, setIsLoadingPatients] = React.useState<boolean>(true);
   const [isLoadingVitals, setIsLoadingVitals] = React.useState<boolean>(false);
+  const [loadingAlerts, setLoadingAlerts] = useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string>("");
+  const [error, setError] = useState<string | null>(null);
 
   const handleLogout = React.useCallback(() => {
     logout();
@@ -124,6 +139,33 @@ export function DoctorDashboard(): React.JSX.Element {
     })();
   }, [apiBaseUrl, selectedDeviceId, token]);
 
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      setLoadingAlerts(true);
+      setError(null);
+      try {
+        const data = await fetchDoctorAlerts(filters);
+        setAlerts(data.alerts);
+      } catch (err) {
+        setError("Failed to fetch alerts");
+      } finally {
+        setLoadingAlerts(false);
+      }
+    };
+
+    fetchAlerts();
+  }, [filters]);
+
+  const handleAcknowledge = async (alertId: number) => {
+    try {
+      await acknowledgeAlert(alertId);
+      setAlerts((prev) => prev.map((alert) => (alert.id === alertId ? { ...alert, status: "acknowledged" } : alert)));
+      alert("Alert acknowledged successfully");
+    } catch {
+      alert("Failed to acknowledge alert");
+    }
+  };
+
   const chartVitals = React.useMemo<ChartVitalsPoint[]>(() => {
     return [...vitals]
       .sort((left, right) => new Date(left.timestamp).getTime() - new Date(right.timestamp).getTime())
@@ -143,7 +185,7 @@ export function DoctorDashboard(): React.JSX.Element {
     [patients, selectedPatientId]
   );
 
-  const alerts = React.useMemo(() => {
+  const alertsToShow = React.useMemo(() => {
     if (!latestVitals) {
       return ["Nicio alerta activa pentru pacientul selectat."];
     }
@@ -334,11 +376,44 @@ export function DoctorDashboard(): React.JSX.Element {
 
         <aside className="doctor-alerts">
           <h2>Active Alerts</h2>
+          <div>
+            <label>
+              Severity:
+              <select onChange={(e) => setFilters({ ...filters, severity: e.target.value })}>
+                <option value="">All</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+              </select>
+            </label>
+            <label>
+              Status:
+              <select onChange={(e) => setFilters({ ...filters, status: e.target.value })}>
+                <option value="">All</option>
+                <option value="active">Active</option>
+                <option value="acknowledged">Acknowledged</option>
+              </select>
+            </label>
+            <label>
+              Time Range:
+              <select onChange={(e) => setFilters({ ...filters, range: e.target.value })}>
+                <option value="">All</option>
+                <option value="1h">Last 1 Hour</option>
+                <option value="24h">Last 24 Hours</option>
+                <option value="7d">Last 7 Days</option>
+              </select>
+            </label>
+          </div>
+          {loadingAlerts && <p>Loading alerts...</p>}
+          {error && <p>{error}</p>}
           <ul>
             {alerts.map((alert) => (
-              <li key={alert}>
-                <p>{alert}</p>
-                <button type="button">ACKNOWLEDGE</button>
+              <li key={alert.id}>
+                <p>{alert.alert_type} - {alert.severity} - {alert.status}</p>
+                <button onClick={() => handleAcknowledge(alert.id)} disabled={alert.status === "acknowledged"}>
+                  Acknowledge
+                </button>
               </li>
             ))}
           </ul>

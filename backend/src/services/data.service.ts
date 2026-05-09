@@ -22,6 +22,17 @@ type PrimaryKeyColumnRow = RowDataPacket & {
   COLUMN_NAME: string;
   DATA_TYPE: string;
 };
+type AlertRow = RowDataPacket & {
+  lid: number;
+  device_id: number | null;
+  user_id: number | null;
+  timestamp: string;
+  alert_type: string;
+  severity: string;
+  status: string;
+  acknowledged_at: string | null;
+  acknowledged_by: number | null;
+};
 
 function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -153,4 +164,71 @@ export async function seedVitals(deviceId: number): Promise<number> {
 
     return retryResult.affectedRows;
   }
+}
+
+export async function acknowledgeAlert(alertId: number, userId: number): Promise<"SUCCESS" | "NOT_FOUND" | "FORBIDDEN" | "ALREADY_ACKNOWLEDGED"> {
+  const [rows] = await dbPool.query<AlertRow[]>(
+    `SELECT lid, user_id, status, acknowledged_at
+     FROM alerts
+     WHERE lid = ?`,
+    [alertId]
+  );
+
+  const alert = rows[0];
+  if (!alert) {
+    return "NOT_FOUND";
+  }
+
+  if (alert.user_id !== userId) {
+    return "FORBIDDEN";
+  }
+
+  if (alert.status === "acknowledged") {
+    return "ALREADY_ACKNOWLEDGED";
+  }
+
+  await dbPool.query<ResultSetHeader>(
+    `UPDATE alerts
+     SET status = 'acknowledged', acknowledged_at = NOW(), acknowledged_by = ?
+     WHERE lid = ?`,
+    [userId, alertId]
+  );
+
+  return "SUCCESS";
+}
+
+export async function getDoctorAlerts(userId: number, filters: { severity?: string; status?: string; range?: string }): Promise<AlertRow[]> {
+  const { severity, status, range } = filters;
+  const conditions: string[] = ["user_id = ?"];
+  const params: (string | number)[] = [userId];
+
+  if (severity) {
+    conditions.push("severity = ?");
+    params.push(severity);
+  }
+
+  if (status) {
+    conditions.push("status = ?");
+    params.push(status);
+  }
+
+  if (range) {
+    const rangeMapping: Record<string, string> = {
+      "1h": "1 HOUR",
+      "24h": "1 DAY",
+      "7d": "7 DAY"
+    };
+    if (rangeMapping[range]) {
+      conditions.push("timestamp >= NOW() - INTERVAL " + rangeMapping[range]);
+    }
+  }
+
+  const [rows] = await dbPool.query<AlertRow[]>(
+    `SELECT * FROM alerts
+     WHERE ${conditions.join(" AND ")}
+     ORDER BY timestamp DESC`,
+    params
+  );
+
+  return rows;
 }

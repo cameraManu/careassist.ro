@@ -18,6 +18,10 @@ export interface AuthenticatedRequest extends Request {
     lastname: string;
     device_id: number | null;
   };
+  params: Record<string, string>;
+  body: Record<string, unknown>;
+  query: Record<string, string | undefined>;
+  headers: Record<string, string | undefined>;
 }
 
 function isTokenPayload(value: unknown): value is TokenPayload {
