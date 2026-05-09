@@ -23,6 +23,19 @@ services:
     networks:
       - careassist-net
 
+  careassist-frontend:
+    build:
+      context: ./frontend-web
+      dockerfile: Dockerfile
+    container_name: careassist-frontend
+    restart: always
+    ports:
+      - "3000:80"
+    networks:
+      - careassist-net
+
+
 networks:
   careassist-net:
     driver: bridge
+
