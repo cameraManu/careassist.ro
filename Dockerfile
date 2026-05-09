@@ -1,26 +1,34 @@
 # --- Stage 1: Build Frontend ---
-FROM node:20-alpine AS build-frontend
-WORKDIR /app/frontend
-# Adjust these paths if your folders are named differently (e.g., 'client')
-COPY frontend/package*.json ./
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+# Copy package files from the root
+COPY package*.json ./
 RUN npm install
-COPY frontend/ ./
+
+# Copy all files from root to builder
+COPY . .
+
+# Run the build (Vite/React usually outputs to /dist)
 RUN npm run build
 
-# --- Stage 2: Run Backend ---
+# --- Stage 2: Final Run Image ---
 FROM node:20-alpine
-WORKDIR /app/backend
+WORKDIR /app
 
-# Install backend dependencies
-COPY backend/package*.json ./
+# Install only production dependencies
+COPY package*.json ./
 RUN npm install --production
 
-# Copy backend source code
-COPY backend/ ./
+# Copy all backend files
+COPY . .
 
-# Copy the built frontend into the backend's public directory
-# Note: Ensure your Express app is configured to serve the 'public' folder
-COPY --from=build-frontend /app/frontend/dist ./public
+# Copy the compiled frontend into a folder named 'public' 
+# so the backend can serve it
+COPY --from=builder /app/dist ./public
 
+# Expose the port your app runs on
 EXPOSE 5000
-CMD ["npm", "start"]
+
+# Start the application
+CMD ["node", "index.js"]
