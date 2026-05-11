@@ -236,6 +236,61 @@
   font-size: 13px;
 }
 
+.doctor-alert-filters {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.doctor-filter-field {
+  display: grid;
+  gap: 4px;
+}
+
+.doctor-filter-field span {
+  font-size: 12px;
+  font-weight: 600;
+  color: #7f1d1d;
+}
+
+.doctor-filter-field select {
+  width: 100%;
+  border: 1px solid #fda4af;
+  border-radius: 8px;
+  background: #fff;
+  color: #7f1d1d;
+  padding: 5px 8px;
+  font-size: 12px;
+}
+
+.doctor-alert-item--active {
+  border-left-color: #ff4d4f;
+  background: #fef2f2;
+}
+
+.doctor-alert-item--acknowledged {
+  border-left-color: #22c55e;
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.doctor-alert-patient {
+  font-size: 12px;
+  color: #7f1d1d;
+  font-weight: 600;
+}
+
+.doctor-alert-item--acknowledged .doctor-alert-patient,
+.doctor-alert-item--acknowledged .doctor-alert-time {
+  color: #166534;
+}
+
+.doctor-alert-time {
+  font-size: 11px;
+  color: #9f1239;
+}
+
 .doctor-alerts button {
   justify-self: start;
   border: 1px solid #ff7875;
@@ -246,6 +301,17 @@
   border-radius: 8px;
   padding: 5px 10px;
   cursor: pointer;
+}
+
+.doctor-alerts button:disabled {
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+.doctor-alert-btn--resolved {
+  border-color: #22c55e;
+  background: #dcfce7;
+  color: #166534;
 }
 
 .doctor-error {

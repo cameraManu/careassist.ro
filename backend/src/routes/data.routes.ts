@@ -1,9 +1,16 @@
 import { Router } from "express";
+import type { ParsedQs } from "qs";
 import type { QueryError } from "mysql2";
 import { authenticateJwt, type AuthenticatedRequest } from "../middleware/auth.js";
 import { requireRoles } from "../middleware/rbac.js";
-import { getLatestVitals, getMetaByUserId, getPatientsByDoctorId, seedVitals, getDoctorAlerts } from "../services/data.service.js";
-import { acknowledgeAlert } from "../services/alert.service.js";
+import {
+  acknowledgeAlert,
+  getDoctorAlerts,
+  getLatestVitals,
+  getMetaByUserId,
+  getPatientsByDoctorId,
+  seedVitals
+} from "../services/data.service.js";
 
 export const dataRouter = Router();
 
@@ -126,11 +133,14 @@ dataRouter.get("/doctor/alerts", authenticateJwt, requireRoles([2, 3]), async (r
       return;
     }
 
-    const { severity, status, range } = req.query;
+    const query = req.query as ParsedQs;
+    const severity = typeof query.severity === "string" ? query.severity : undefined;
+    const status = typeof query.status === "string" ? query.status : undefined;
+    const range = typeof query.range === "string" ? query.range : undefined;
     const alerts = await getDoctorAlerts(userId, {
-      severity: severity as string,
-      status: status as string,
-      range: range as string
+      severity,
+      status,
+      range
     });
 
     res.json({ alerts });
