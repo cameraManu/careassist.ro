@@ -15,6 +15,7 @@ import {
   fetchDoctorAlerts,
   type DoctorAlert
 } from "../../../services/alert.service";
+import { getApiOrigin } from "../../../config/apiBaseUrl.js";
 import "./DoctorDashboard.css";
 
 type DoctorPatientSummary = {
@@ -48,7 +49,7 @@ type ChartVitalsPoint = VitalsRecord & {
 export function DoctorDashboard(): React.JSX.Element {
   const { user, token, logout } = useAuth();
   const navigate = useNavigate();
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4001";
+  const apiOrigin = React.useMemo(() => getApiOrigin(), []);
   const [patients, setPatients] = React.useState<DoctorPatientSummary[]>([]);
   const [selectedPatientId, setSelectedPatientId] = React.useState<number | null>(null);
   const [selectedDeviceId, setSelectedDeviceId] = React.useState<number | null>(null);
@@ -76,7 +77,7 @@ export function DoctorDashboard(): React.JSX.Element {
       setIsLoadingPatients(true);
       setErrorMessage("");
       try {
-        const response = await axios.get<DoctorPatientsResponse>(`${apiBaseUrl}/api/v1/doctor/patients`, {
+        const response = await axios.get<DoctorPatientsResponse>(`${apiOrigin}/api/v1/doctor/patients`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -103,7 +104,7 @@ export function DoctorDashboard(): React.JSX.Element {
         setIsLoadingPatients(false);
       }
     })();
-  }, [apiBaseUrl, token]);
+  }, [apiOrigin, token]);
 
   React.useEffect(() => {
     if (!token || selectedDeviceId === null) {
@@ -115,7 +116,7 @@ export function DoctorDashboard(): React.JSX.Element {
       setIsLoadingVitals(true);
       setErrorMessage("");
       try {
-        const response = await axios.get<VitalsResponse>(`${apiBaseUrl}/api/v1/vitals/${selectedDeviceId}`, {
+        const response = await axios.get<VitalsResponse>(`${apiOrigin}/api/v1/vitals/${selectedDeviceId}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -131,7 +132,7 @@ export function DoctorDashboard(): React.JSX.Element {
         setIsLoadingVitals(false);
       }
     })();
-  }, [apiBaseUrl, selectedDeviceId, token]);
+  }, [apiOrigin, selectedDeviceId, token]);
 
   useEffect(() => {
     if (!token) {

@@ -7,6 +7,7 @@ import type {
 } from "../../shared/src/db.types.js";
 import "./Dashboard.css";
 import { useState, useEffect } from "react";
+import { getApiV1BaseUrl } from "./config/apiBaseUrl.js";
 
 interface PatientSummary {
   user: Pick<UsersTable, "id" | "firstname" | "lastname">;
@@ -89,8 +90,7 @@ export function Dashboard(): React.JSX.Element {
   useEffect(() => {
     const fetchPatients = async () => {
       try {
-        const apiUrl =
-          import.meta.env.VITE_API_URL || "http://localhost:4000/api/v1";
+        const apiUrl = getApiV1BaseUrl();
         const response = await fetch(`${apiUrl}/patients`);
         const data = await response.json();
 

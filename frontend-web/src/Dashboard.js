@@ -1,6 +1,7 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import "./Dashboard.css";
 import { useState, useEffect } from "react";
+import { getApiV1BaseUrl } from "./config/apiBaseUrl.js";
 const patients = [
     {
         user: { id: 100, firstname: "Robert", lastname: "Chen" },
@@ -65,7 +66,7 @@ export function Dashboard() {
     useEffect(() => {
         const fetchPatients = async () => {
             try {
-                const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000/api/v1";
+                const apiUrl = getApiV1BaseUrl();
                 const response = await fetch(`${apiUrl}/patients`);
                 const data = await response.json();
                 const patientSummaries = data.map((user) => ({

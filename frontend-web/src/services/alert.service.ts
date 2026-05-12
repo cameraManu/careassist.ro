@@ -1,6 +1,5 @@
 import axios from "axios";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4001";
+import { getApiOrigin } from "../config/apiBaseUrl.js";
 
 export interface DoctorAlert {
   id: number;
@@ -34,7 +33,7 @@ export async function fetchDoctorAlerts(
   token: string,
   filters: DoctorAlertsFilters
 ): Promise<DoctorAlertsResponse> {
-  const response = await axios.get<DoctorAlertsResponse>(`${API_BASE_URL}/api/v1/doctor/alerts`, {
+  const response = await axios.get<DoctorAlertsResponse>(`${getApiOrigin()}/api/v1/doctor/alerts`, {
     params: filters,
     headers: authHeaders(token)
   });
@@ -43,7 +42,7 @@ export async function fetchDoctorAlerts(
 
 export async function acknowledgeDoctorAlert(token: string, alertId: number): Promise<{ message: string }> {
   const response = await axios.patch<{ message: string }>(
-    `${API_BASE_URL}/api/v1/alerts/${alertId}/acknowledge`,
+    `${getApiOrigin()}/api/v1/alerts/${alertId}/acknowledge`,
     {},
     { headers: authHeaders(token) }
   );
