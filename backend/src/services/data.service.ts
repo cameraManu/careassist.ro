@@ -18,20 +18,32 @@ type DoctorPatientRow = RowDataPacket & {
   diagnosis: string | null;
   device_id: number | null;
 };
+type DoctorAlertRow = RowDataPacket & {
+  id: number;
+  device_id: number | null;
+  user_id: number | null;
+  patient_firstname: string | null;
+  patient_lastname: string | null;
+  timestamp: string;
+  alert_type: string;
+  severity: "low" | "medium" | "high" | "critical";
+  status: "active" | "acknowledged";
+  acknowledged_at: string | null;
+  acknowledged_by: number | null;
+};
+type DoctorAlertFilters = {
+  severity?: string;
+  status?: string;
+  range?: string;
+};
+type AlertOwnershipRow = RowDataPacket & {
+  id: number;
+  owner_id: number | null;
+  status: string | null;
+};
 type PrimaryKeyColumnRow = RowDataPacket & {
   COLUMN_NAME: string;
   DATA_TYPE: string;
-};
-type AlertRow = RowDataPacket & {
-  lid: number;
-  device_id: number | null;
-  user_id: number | null;
-  timestamp: string;
-  alert_type: string;
-  severity: string;
-  status: string;
-  acknowledged_at: string | null;
-  acknowledged_by: number | null;
 };
 
 function randomInt(min: number, max: number): number {
@@ -102,6 +114,89 @@ export async function getPatientsByDoctorId(doctorId: number): Promise<DoctorPat
   return rows;
 }
 
+export async function getDoctorAlerts(doctorId: number, filters: DoctorAlertFilters): Promise<DoctorAlertRow[]> {
+  const conditions: string[] = ["u.assigned_doctor_id = ?"];
+  const values: Array<number | string> = [doctorId];
+
+  if (filters.severity && ["low", "medium", "high", "critical"].includes(filters.severity)) {
+    conditions.push("a.severity = ?");
+    values.push(filters.severity);
+  }
+
+  if (filters.status && ["active", "acknowledged"].includes(filters.status)) {
+    conditions.push("a.status = ?");
+    values.push(filters.status);
+  }
+
+  if (filters.range === "1h") {
+    conditions.push("a.timestamp >= DATE_SUB(NOW(), INTERVAL 1 HOUR)");
+  } else if (filters.range === "24h") {
+    conditions.push("a.timestamp >= DATE_SUB(NOW(), INTERVAL 24 HOUR)");
+  } else if (filters.range === "7d") {
+    conditions.push("a.timestamp >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
+  }
+
+  const [rows] = await dbPool.query<DoctorAlertRow[]>(
+    `SELECT
+      a.lid AS id,
+      a.device_id,
+      a.user_id,
+      u.firstname AS patient_firstname,
+      u.lastname AS patient_lastname,
+      a.timestamp,
+      a.alert_type,
+      a.severity,
+      a.status,
+      a.acknowledged_at,
+      a.acknowledged_by
+    FROM alerts a
+    LEFT JOIN users u ON u.id = a.user_id
+    WHERE ${conditions.join(" AND ")}
+    ORDER BY a.timestamp DESC`,
+    values
+  );
+
+  return rows;
+}
+
+export async function acknowledgeAlert(
+  alertId: number,
+  doctorId: number
+): Promise<"NOT_FOUND" | "FORBIDDEN" | "ALREADY_ACKNOWLEDGED" | "UPDATED"> {
+  const [ownershipRows] = await dbPool.query<AlertOwnershipRow[]>(
+    `SELECT a.lid AS id, u.assigned_doctor_id AS owner_id, a.status
+     FROM alerts a
+     LEFT JOIN users u ON u.id = a.user_id
+     WHERE a.lid = ?
+     LIMIT 1`,
+    [alertId]
+  );
+
+  const row = ownershipRows[0];
+  if (!row) {
+    return "NOT_FOUND";
+  }
+
+  if (row.owner_id !== doctorId) {
+    return "FORBIDDEN";
+  }
+
+  if (row.status === "acknowledged") {
+    return "ALREADY_ACKNOWLEDGED";
+  }
+
+  await dbPool.execute(
+    `UPDATE alerts
+     SET status = 'acknowledged',
+         acknowledged_at = NOW(),
+         acknowledged_by = ?
+     WHERE lid = ?`,
+    [doctorId, alertId]
+  );
+
+  return "UPDATED";
+}
+
 export async function seedVitals(deviceId: number): Promise<number> {
   const rows: Array<[number, Date, number, number, number, number, number]> = [];
 
@@ -166,69 +261,3 @@ export async function seedVitals(deviceId: number): Promise<number> {
   }
 }
 
-export async function acknowledgeAlert(alertId: number, userId: number): Promise<"SUCCESS" | "NOT_FOUND" | "FORBIDDEN" | "ALREADY_ACKNOWLEDGED"> {
-  const [rows] = await dbPool.query<AlertRow[]>(
-    `SELECT lid, user_id, status, acknowledged_at
-     FROM alerts
-     WHERE lid = ?`,
-    [alertId]
-  );
-
-  const alert = rows[0];
-  if (!alert) {
-    return "NOT_FOUND";
-  }
-
-  if (alert.user_id !== userId) {
-    return "FORBIDDEN";
-  }
-
-  if (alert.status === "acknowledged") {
-    return "ALREADY_ACKNOWLEDGED";
-  }
-
-  await dbPool.query<ResultSetHeader>(
-    `UPDATE alerts
-     SET status = 'acknowledged', acknowledged_at = NOW(), acknowledged_by = ?
-     WHERE lid = ?`,
-    [userId, alertId]
-  );
-
-  return "SUCCESS";
-}
-
-export async function getDoctorAlerts(userId: number, filters: { severity?: string; status?: string; range?: string }): Promise<AlertRow[]> {
-  const { severity, status, range } = filters;
-  const conditions: string[] = ["user_id = ?"];
-  const params: (string | number)[] = [userId];
-
-  if (severity) {
-    conditions.push("severity = ?");
-    params.push(severity);
-  }
-
-  if (status) {
-    conditions.push("status = ?");
-    params.push(status);
-  }
-
-  if (range) {
-    const rangeMapping: Record<string, string> = {
-      "1h": "1 HOUR",
-      "24h": "1 DAY",
-      "7d": "7 DAY"
-    };
-    if (rangeMapping[range]) {
-      conditions.push("timestamp >= NOW() - INTERVAL " + rangeMapping[range]);
-    }
-  }
-
-  const [rows] = await dbPool.query<AlertRow[]>(
-    `SELECT * FROM alerts
-     WHERE ${conditions.join(" AND ")}
-     ORDER BY timestamp DESC`,
-    params
-  );
-
-  return rows;
-}

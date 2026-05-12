@@ -15,12 +15,21 @@ CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   firstname VARCHAR(100) NOT NULL,
   lastname VARCHAR(100) NOT NULL,
+  username VARCHAR(100) NOT NULL UNIQUE,
+  email VARCHAR(150) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
   device_id INT NULL,
   permission_level INT NOT NULL,
+  creation_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  deleted DATETIME NULL,
+  assigned_doctor_id INT NULL,
   CONSTRAINT chk_users_permission_level CHECK (permission_level BETWEEN 0 AND 4),
   CONSTRAINT fk_users_device FOREIGN KEY (device_id)
     REFERENCES devices(id)
+    ON UPDATE CASCADE
+    ON DELETE SET NULL,
+  CONSTRAINT fk_users_assigned_doctor FOREIGN KEY (assigned_doctor_id)
+    REFERENCES users(id)
     ON UPDATE CASCADE
     ON DELETE SET NULL
 );
@@ -75,14 +84,22 @@ CREATE TABLE IF NOT EXISTS alerts (
   timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   alert_type VARCHAR(100) NOT NULL,
   severity VARCHAR(20) NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'active',
+  acknowledged_at DATETIME NULL,
+  acknowledged_by INT NULL,
   INDEX idx_alerts_timestamp (timestamp),
   INDEX idx_alerts_user (user_id),
   INDEX idx_alerts_device (device_id),
+  INDEX idx_alerts_status_timestamp (status, timestamp),
   CONSTRAINT fk_alerts_device FOREIGN KEY (device_id)
     REFERENCES devices(id)
     ON UPDATE CASCADE
     ON DELETE SET NULL,
   CONSTRAINT fk_alerts_user FOREIGN KEY (user_id)
+    REFERENCES users(id)
+    ON UPDATE CASCADE
+    ON DELETE SET NULL,
+  CONSTRAINT fk_alerts_acknowledged_by FOREIGN KEY (acknowledged_by)
     REFERENCES users(id)
     ON UPDATE CASCADE
     ON DELETE SET NULL

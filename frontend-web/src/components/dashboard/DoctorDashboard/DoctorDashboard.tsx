@@ -10,7 +10,11 @@ import {
   YAxis
 } from "recharts";
 import { useAuth } from "../../../context/AuthContext";
-import { fetchDoctorAlerts, acknowledgeAlert } from "../../services/alert.service";
+import {
+  acknowledgeDoctorAlert,
+  fetchDoctorAlerts,
+  type DoctorAlert
+} from "../../../services/alert.service";
 import "./DoctorDashboard.css";
 
 type DoctorPatientSummary = {
@@ -41,16 +45,6 @@ type ChartVitalsPoint = VitalsRecord & {
   chartTimestamp: string;
 };
 
-interface Alert {
-  id: number;
-  alert_type: string;
-  severity: string;
-  status: string;
-  timestamp: string;
-  acknowledged_at?: string;
-  acknowledged_by?: number;
-}
-
 export function DoctorDashboard(): React.JSX.Element {
   const { user, token, logout } = useAuth();
   const navigate = useNavigate();
@@ -59,7 +53,7 @@ export function DoctorDashboard(): React.JSX.Element {
   const [selectedPatientId, setSelectedPatientId] = React.useState<number | null>(null);
   const [selectedDeviceId, setSelectedDeviceId] = React.useState<number | null>(null);
   const [vitals, setVitals] = React.useState<VitalsRecord[]>([]);
-  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [alerts, setAlerts] = useState<DoctorAlert[]>([]);
   const [filters, setFilters] = useState({ severity: "", status: "", range: "" });
   const [isLoadingPatients, setIsLoadingPatients] = React.useState<boolean>(true);
   const [isLoadingVitals, setIsLoadingVitals] = React.useState<boolean>(false);
@@ -140,11 +134,16 @@ export function DoctorDashboard(): React.JSX.Element {
   }, [apiBaseUrl, selectedDeviceId, token]);
 
   useEffect(() => {
+    if (!token) {
+      setAlerts([]);
+      return;
+    }
+
     const fetchAlerts = async () => {
       setLoadingAlerts(true);
       setError(null);
       try {
-        const data = await fetchDoctorAlerts(filters);
+        const data = await fetchDoctorAlerts(token, filters);
         setAlerts(data.alerts);
       } catch (err) {
         setError("Failed to fetch alerts");
@@ -154,15 +153,18 @@ export function DoctorDashboard(): React.JSX.Element {
     };
 
     fetchAlerts();
-  }, [filters]);
+  }, [filters, token]);
 
   const handleAcknowledge = async (alertId: number) => {
+    if (!token) {
+      return;
+    }
+
     try {
-      await acknowledgeAlert(alertId);
+      await acknowledgeDoctorAlert(token, alertId);
       setAlerts((prev) => prev.map((alert) => (alert.id === alertId ? { ...alert, status: "acknowledged" } : alert)));
-      alert("Alert acknowledged successfully");
     } catch {
-      alert("Failed to acknowledge alert");
+      setError("Failed to acknowledge alert");
     }
   };
 
@@ -185,24 +187,6 @@ export function DoctorDashboard(): React.JSX.Element {
     [patients, selectedPatientId]
   );
 
-  const alertsToShow = React.useMemo(() => {
-    if (!latestVitals) {
-      return ["Nicio alerta activa pentru pacientul selectat."];
-    }
-
-    const generatedAlerts: string[] = [];
-    if ((latestVitals.heart_rate ?? 0) > 100) {
-      generatedAlerts.push("Alert: Heart rate peste prag.");
-    }
-    if ((latestVitals.gas_detected ?? 0) > 0) {
-      generatedAlerts.push("Alert: Detectie de gaz in camera pacientului.");
-    }
-    if ((latestVitals.ambient_temperature ?? 0) > 38) {
-      generatedAlerts.push("Alert: Temperatura ambientala ridicata.");
-    }
-    return generatedAlerts.length > 0 ? generatedAlerts : ["Nicio alerta activa pentru pacientul selectat."];
-  }, [latestVitals]);
-
   const recentLogs = React.useMemo(() => {
     return chartVitals
       .slice(-4)
@@ -222,6 +206,16 @@ export function DoctorDashboard(): React.JSX.Element {
     setSelectedPatientId(patient.id);
     setSelectedDeviceId(patient.device_id);
   }, []);
+
+  function getAlertPatientLabel(alertItem: DoctorAlert): string {
+    if (alertItem.patient_firstname && alertItem.patient_lastname) {
+      return `${alertItem.patient_firstname} ${alertItem.patient_lastname}`;
+    }
+    if (alertItem.user_id) {
+      return `Patient #${alertItem.user_id}`;
+    }
+    return "Patient necunoscut";
+  }
 
   return (
     <div className="doctor-dashboard-page">
@@ -376,10 +370,10 @@ export function DoctorDashboard(): React.JSX.Element {
 
         <aside className="doctor-alerts">
           <h2>Active Alerts</h2>
-          <div>
-            <label>
-              Severity:
-              <select onChange={(e) => setFilters({ ...filters, severity: e.target.value })}>
+          <div className="doctor-alert-filters">
+            <label className="doctor-filter-field">
+              <span>Severity</span>
+              <select value={filters.severity} onChange={(e) => setFilters({ ...filters, severity: e.target.value })}>
                 <option value="">All</option>
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -387,17 +381,17 @@ export function DoctorDashboard(): React.JSX.Element {
                 <option value="critical">Critical</option>
               </select>
             </label>
-            <label>
-              Status:
-              <select onChange={(e) => setFilters({ ...filters, status: e.target.value })}>
+            <label className="doctor-filter-field">
+              <span>Status</span>
+              <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}>
                 <option value="">All</option>
                 <option value="active">Active</option>
                 <option value="acknowledged">Acknowledged</option>
               </select>
             </label>
-            <label>
-              Time Range:
-              <select onChange={(e) => setFilters({ ...filters, range: e.target.value })}>
+            <label className="doctor-filter-field">
+              <span>Time Range</span>
+              <select value={filters.range} onChange={(e) => setFilters({ ...filters, range: e.target.value })}>
                 <option value="">All</option>
                 <option value="1h">Last 1 Hour</option>
                 <option value="24h">Last 24 Hours</option>
@@ -409,10 +403,25 @@ export function DoctorDashboard(): React.JSX.Element {
           {error && <p>{error}</p>}
           <ul>
             {alerts.map((alert) => (
-              <li key={alert.id}>
-                <p>{alert.alert_type} - {alert.severity} - {alert.status}</p>
-                <button onClick={() => handleAcknowledge(alert.id)} disabled={alert.status === "acknowledged"}>
-                  Acknowledge
+              <li
+                key={alert.id}
+                className={`doctor-alert-item ${
+                  alert.status === "acknowledged" ? "doctor-alert-item--acknowledged" : "doctor-alert-item--active"
+                }`}
+              >
+                <p>
+                  {alert.alert_type} - {alert.severity} - {alert.status}
+                </p>
+                <p className="doctor-alert-patient">{getAlertPatientLabel(alert)}</p>
+                <p className="doctor-alert-time">
+                  {new Date(alert.timestamp).toLocaleString("ro-RO")}
+                </p>
+                <button
+                  onClick={() => handleAcknowledge(alert.id)}
+                  disabled={alert.status === "acknowledged"}
+                  className={alert.status === "acknowledged" ? "doctor-alert-btn--resolved" : ""}
+                >
+                  {alert.status === "acknowledged" ? "Resolved" : "Acknowledge"}
                 </button>
               </li>
             ))}
