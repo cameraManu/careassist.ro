@@ -1,6 +1,5 @@
 import type { LoginRequest, LoginResponse, RegisterRequest } from "../../../shared/src/db.types";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4001";
+import { getApiOrigin } from "../config/apiBaseUrl.js";
 
 type RequestMethod = "GET" | "POST";
 
@@ -20,7 +19,7 @@ async function requestJson<T>(options: RequestOptions): Promise<T> {
     headers.Authorization = `Bearer ${options.token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${options.path}`, {
+  const response = await fetch(`${getApiOrigin()}${options.path}`, {
     method: options.method,
     headers,
     body: options.body ? JSON.stringify(options.body) : undefined

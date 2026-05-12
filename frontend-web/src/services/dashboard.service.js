@@ -1,6 +1,6 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4001";
+import { getApiOrigin } from "../config/apiBaseUrl.js";
 async function getJson(options) {
-    const response = await fetch(`${API_BASE_URL}${options.path}`, {
+    const response = await fetch(`${getApiOrigin()}${options.path}`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",

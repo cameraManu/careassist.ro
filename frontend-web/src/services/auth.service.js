@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4001";
+import { getApiOrigin } from "../config/apiBaseUrl.js";
 async function requestJson(options) {
     const headers = {
         "Content-Type": "application/json"
@@ -6,7 +6,7 @@ async function requestJson(options) {
     if (options.token) {
         headers.Authorization = `Bearer ${options.token}`;
     }
-    const response = await fetch(`${API_BASE_URL}${options.path}`, {
+    const response = await fetch(`${getApiOrigin()}${options.path}`, {
         method: options.method,
         headers,
         body: options.body ? JSON.stringify(options.body) : undefined

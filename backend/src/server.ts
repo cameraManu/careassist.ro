@@ -1,4 +1,5 @@
 import cors from "cors";
+import type { CorsOptions } from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import { verifyDatabaseConnection } from "./config/db.js";
@@ -11,7 +12,35 @@ dotenv.config();
 const app = express();
 const port = Number(process.env.PORT ?? 4000);
 
-app.use(cors());
+/** Origini permise pentru CORS când frontend-ul e servit de pe domeniul din `front_domain` (mediu Docker). */
+function normalizeOriginForCors(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return trimmed;
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed.replace(/\/+$/, "");
+  }
+  return `https://${trimmed}`.replace(/\/+$/, "");
+}
+
+function buildCorsOptions(): CorsOptions {
+  const raw = process.env.front_domain?.trim();
+  if (!raw) {
+    return { origin: true };
+  }
+  const origins = raw
+    .split(",")
+    .map((entry) => normalizeOriginForCors(entry))
+    .filter(Boolean);
+  if (origins.length === 0) {
+    return { origin: true };
+  }
+  if (origins.length === 1) {
+    return { origin: origins[0] };
+  }
+  return { origin: origins };
+}
+
+app.use(cors(buildCorsOptions()));
 app.use(express.json({ limit: "1mb" }));
 app.use("/api/v1", healthRouter);
 app.use("/api/v1", authRouter);

@@ -5,11 +5,12 @@ import { useNavigate } from "react-router-dom";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useAuth } from "../../../context/AuthContext";
 import { acknowledgeDoctorAlert, fetchDoctorAlerts } from "../../../services/alert.service";
+import { getApiOrigin } from "../../../config/apiBaseUrl.js";
 import "./DoctorDashboard.css";
 export function DoctorDashboard() {
     const { user, token, logout } = useAuth();
     const navigate = useNavigate();
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4001";
+    const apiOrigin = React.useMemo(() => getApiOrigin(), []);
     const [patients, setPatients] = React.useState([]);
     const [selectedPatientId, setSelectedPatientId] = React.useState(null);
     const [selectedDeviceId, setSelectedDeviceId] = React.useState(null);
@@ -34,7 +35,7 @@ export function DoctorDashboard() {
             setIsLoadingPatients(true);
             setErrorMessage("");
             try {
-                const response = await axios.get(`${apiBaseUrl}/api/v1/doctor/patients`, {
+                const response = await axios.get(`${apiOrigin}/api/v1/doctor/patients`, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -63,7 +64,7 @@ export function DoctorDashboard() {
                 setIsLoadingPatients(false);
             }
         })();
-    }, [apiBaseUrl, token]);
+    }, [apiOrigin, token]);
     React.useEffect(() => {
         if (!token || selectedDeviceId === null) {
             setVitals([]);
@@ -73,7 +74,7 @@ export function DoctorDashboard() {
             setIsLoadingVitals(true);
             setErrorMessage("");
             try {
-                const response = await axios.get(`${apiBaseUrl}/api/v1/vitals/${selectedDeviceId}`, {
+                const response = await axios.get(`${apiOrigin}/api/v1/vitals/${selectedDeviceId}`, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -92,7 +93,7 @@ export function DoctorDashboard() {
                 setIsLoadingVitals(false);
             }
         })();
-    }, [apiBaseUrl, selectedDeviceId, token]);
+    }, [apiOrigin, selectedDeviceId, token]);
     useEffect(() => {
         if (!token) {
             setAlerts([]);
